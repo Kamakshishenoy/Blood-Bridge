@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BloodBridge | Emergency Blood Donor Finder</title>
+    <meta
+      name="description"
+      content="BloodBridge helps hospitals and emergency coordinators find the best available blood donors quickly."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Main navigation">
+        <div class="brand-block">
+          <div class="brand-mark">B</div>
+          <div>
+            <div class="brand-name">BloodBridge</div>
+            <div class="brand-tagline">Connect. Respond. Save Time.</div>
+          </div>
+        </div>
+
+        <nav class="nav" aria-label="Primary navigation">
+          <button class="nav-item active" type="button" data-target="dashboard">
+            Dashboard
+          </button>
+          <button class="nav-item" type="button" data-target="donors-section">
+            Find Donors
+          </button>
+          <button class="nav-item" type="button" data-target="requests-section">
+            Emergency Requests
+          </button>
+          <button class="nav-item" type="button" data-target="donor-form-section">
+            Register Donor
+          </button>
+          <button class="nav-item" type="button" data-target="request-form-section">
+            Create Request
+          </button>
+          <button class="nav-item" type="button" data-target="account-section">
+            My Account
+          </button>
+        </nav>
+
+        <div class="system-panel">
+          <p class="label">System Status</p>
+          <div class="status-row">
+            <span id="backendStatusDot" class="status-dot offline"></span>
+            <span id="backendStatusText">Checking backend...</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Medical emergency coordination</p>
+            <h1>Emergency response dashboard</h1>
+          </div>
+          <button id="refreshDataBtn" class="btn btn-primary" type="button">Refresh data</button>
+        </header>
+
+        <section id="dashboard" class="screen active">
+          <div class="stats-grid">
+            <article class="stat-card">
+              <div class="stat-header">
+                <span>Total donors</span>
+                <span class="stat-icon donor">❤</span>
+              </div>
+              <h2 id="totalDonorsStat">0</h2>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-header">
+                <span>Available donors</span>
+                <span class="stat-icon available">✓</span>
+              </div>
+              <h2 id="availableDonorsStat">0</h2>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-header">
+                <span>Active requests</span>
+                <span class="stat-icon request">⚑</span>
+              </div>
+              <h2 id="activeRequestsStat">0</h2>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-header">
+                <span>Critical requests</span>
+                <span class="stat-icon critical">!</span>
+              </div>
+              <h2 id="criticalRequestsStat">0</h2>
+            </article>
+
+            <article class="stat-card">
+              <div class="stat-header">
+                <span>Completed requests</span>
+                <span class="stat-icon complete">✔</span>
+              </div>
+              <h2 id="fulfilledRequestsStat">0</h2>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Live operations</p>
+                  <h2>Active emergency requests</h2>
+                </div>
+              </div>
+              <div id="dashboardRequests" class="stack-list"></div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Registry</p>
+                  <h2>Recently registered donors</h2>
+                </div>
+              </div>
+              <div id="dashboardDonors" class="stack-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="donors-section" class="screen">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Donor registry</p>
+              <h2>Find donors</h2>
+            </div>
+            <button id="registerDonorFromListBtn" class="btn btn-primary" type="button">Register donor</button>
+          </div>
+
+          <div class="filter-panel panel">
+            <div class="filters-grid">
+              <label>
+                <span>Search</span>
+                <input id="donorSearchInput" type="search" placeholder="Search donors" />
+              </label>
+              <label>
+                <span>Blood group</span>
+                <select id="donorBloodFilter">
+                  <option value="all">All</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </label>
+              <label>
+                <span>Availability</span>
+                <select id="donorAvailabilityFilter">
+                  <option value="all">All</option>
+                  <option value="available">Available</option>
+                  <option value="temporarily unavailable">Temporarily unavailable</option>
+                </select>
+              </label>
+              <label>
+                <span>City</span>
+                <select id="donorCityFilter">
+                  <option value="all">All cities</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="filter-actions">
+              <label>
+                <span>Apply filter</span>
+                <select id="donorQuickFilter">
+                  <option value="all">All donors</option>
+                  <option value="available">Available donors</option>
+                  <option value="recent">Recently active</option>
+                  <option value="city">Same city</option>
+                </select>
+              </label>
+              <button id="applyDonorFiltersBtn" class="btn btn-primary" type="button">Apply filters</button>
+              <button id="resetDonorFiltersBtn" class="btn btn-secondary" type="button">Clear all</button>
+              <span id="donorResultCount" class="result-count">0 donors found</span>
+            </div>
+          </div>
+
+          <div id="donorList" class="card-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="requests-section" class="screen">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Emergency queue</p>
+              <h2>Emergency requests</h2>
+            </div>
+            <button id="createRequestFromListBtn" class="btn btn-primary" type="button">Create request</button>
+          </div>
+
+          <div class="filter-panel panel">
+            <div class="filters-grid">
+              <label>
+                <span>Search</span>
+                <input id="requestSearchInput" type="search" placeholder="Search requests" />
+              </label>
+              <label>
+                <span>Blood group</span>
+                <select id="requestBloodFilter">
+                  <option value="all">All</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </label>
+              <label>
+                <span>Urgency</span>
+                <select id="requestUrgencyFilter">
+                  <option value="all">All</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Normal">Normal</option>
+                </select>
+              </label>
+              <label>
+                <span>City</span>
+                <select id="requestCityFilter">
+                  <option value="all">All cities</option>
+                </select>
+              </label>
+              <label>
+                <span>Status</span>
+                <select id="requestStatusFilter">
+                  <option value="all">All</option>
+                  <option value="Active">Active</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Fulfilled">Fulfilled</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="filter-actions">
+              <label>
+                <span>Apply filter</span>
+                <select id="requestQuickFilter">
+                  <option value="all">All requests</option>
+                  <option value="critical">Critical only</option>
+                  <option value="active">Active only</option>
+                  <option value="city">Same city</option>
+                </select>
+              </label>
+              <button id="applyRequestFiltersBtn" class="btn btn-primary" type="button">Apply filters</button>
+              <button id="resetRequestFiltersBtn" class="btn btn-secondary" type="button">Clear all</button>
+            </div>
+          </div>
+
+          <div id="requestList" class="request-list" aria-live="polite"></div>
+        </section>
+
+        <section id="account-section" class="screen">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Profile</p>
+              <h2>My Account</h2>
+            </div>
+          </div>
+
+          <div class="panel account-panel">
+            <div class="account-header">
+              <div class="brand-mark small">B</div>
+              <div>
+                <h3>BloodBridge User</h3>
+                <p>Verified emergency responder account</p>
+              </div>
+            </div>
+
+            <div class="account-grid">
+              <div class="account-card">
+                <span>Account Status</span>
+                <select id="accountStatusSelect" aria-label="Account availability">
+                  <option value="Active">Active</option>
+                  <option value="Unavailable">Unavailable</option>
+                </select>
+              </div>
+              <div class="account-card">
+                <span>Verification</span>
+                <strong>Approved</strong>
+              </div>
+              <div class="account-card">
+                <span>Role</span>
+                <strong>Hospital / Citizen</strong>
+              </div>
+              <div class="account-card">
+                <span>Preferred Contact</span>
+                <strong>Phone + Email</strong>
+              </div>
+            </div>
+
+            <div class="info-panel">
+              <h4>Patient support note</h4>
+              <p>Every patient request is handled with care and urgency. We match verified donors, confirm locations, and help connect patients quickly to the right blood support.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="donor-form-section" class="screen">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Donor onboarding</p>
+              <h2>Register donor</h2>
+            </div>
+          </div>
+
+          <form id="donorForm" class="panel form-panel" novalidate>
+            <div class="form-grid">
+              <label>
+                <span>Full name</span>
+                <input name="name" type="text" required />
+              </label>
+
+              <label>
+                <span>Blood group</span>
+                <select name="bloodGroup" required>
+                  <option value="">Select</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Phone number</span>
+                <input name="phone" type="tel" required />
+              </label>
+
+              <label>
+                <span>Email</span>
+                <input name="email" type="email" required />
+              </label>
+
+              <label>
+                <span>Location</span>
+                <input name="location" type="text" required />
+              </label>
+
+              <label>
+                <span>City</span>
+                <input name="city" type="text" required />
+              </label>
+
+              <label>
+                <span>Availability</span>
+                <select name="availability" required>
+                  <option value="">Select</option>
+                  <option value="Available">Available</option>
+                  <option value="Temporarily unavailable">Temporarily unavailable</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Last donation date</span>
+                <input name="lastDonationDate" type="date" required />
+              </label>
+
+              <label>
+                <span>Times donated</span>
+                <input name="donationCount" type="number" min="1" max="50" value="1" required />
+              </label>
+
+              <label>
+                <span>Age</span>
+                <input name="age" type="number" min="18" max="65" required />
+              </label>
+
+              <label>
+                <span>Gender</span>
+                <select name="gender">
+                  <option value="">Prefer not to say</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </label>
+
+              <label class="full-width">
+                <span>Additional information</span>
+                <textarea name="additionalInfo" rows="4" placeholder="Notes about health status, availability windows, or recent updates."></textarea>
+              </label>
+
+              <label class="full-width">
+                <span>Proof of Identity (required)</span>
+                <input name="proof" type="file" accept=".pdf,.jpg,.jpeg,.png" required />
+                <small>Upload valid ID proof (Aadhar, Passport, etc.)</small>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-secondary">Reset</button>
+              <button type="submit" class="btn btn-primary">Register donor</button>
+            </div>
+            <div id="donorFormSuccess" class="form-success" style="display:none;" role="status"></div>
+            <div id="donorFormError" class="form-error" role="alert"></div>
+          </form>
+        </section>
+
+        <section id="request-form-section" class="screen">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Emergency intake</p>
+              <h2>Create emergency request</h2>
+            </div>
+          </div>
+
+          <form id="requestForm" class="panel form-panel" novalidate>
+            <div class="form-grid">
+              <label>
+                <span>Required blood group</span>
+                <select name="requiredBloodGroup" required>
+                  <option value="">Select</option>
+                  <option value="A+">A+</option>
+                  <option value="A-">A-</option>
+                  <option value="B+">B+</option>
+                  <option value="B-">B-</option>
+                  <option value="AB+">AB+</option>
+                  <option value="AB-">AB-</option>
+                  <option value="O+">O+</option>
+                  <option value="O-">O-</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Required quantity</span>
+                <input name="requiredQuantity" type="number" min="1" max="20" required />
+              </label>
+
+              <label>
+                <span>Units already fulfilled</span>
+                <input name="fulfilledUnits" type="number" min="0" max="20" value="0" />
+              </label>
+
+              <label>
+                <span>Patient name</span>
+                <input name="patientName" type="text" required />
+              </label>
+
+              <label>
+                <span>Hospital name</span>
+                <input name="hospitalName" type="text" required />
+              </label>
+
+              <label>
+                <span>Hospital location</span>
+                <input name="location" type="text" required />
+              </label>
+
+              <label>
+                <span>City</span>
+                <input name="city" type="text" required />
+              </label>
+
+              <label>
+                <span>Required date</span>
+                <input name="requiredDate" type="date" required />
+              </label>
+
+              <label>
+                <span>Required time</span>
+                <input name="requiredTime" type="time" required />
+              </label>
+
+              <label class="full-width">
+                <span>Emergency description</span>
+                <textarea name="emergencyDescription" rows="4" required></textarea>
+              </label>
+
+              <label>
+                <span>Contact person</span>
+                <input name="contactPerson" type="text" required />
+              </label>
+
+              <label>
+                <span>Contact phone</span>
+                <input name="contactPhone" type="tel" required />
+              </label>
+
+              <label>
+                <span>Urgency</span>
+                <select name="urgency" required>
+                  <option value="">Select</option>
+                  <option value="Critical">Critical</option>
+                  <option value="High">High</option>
+                  <option value="Normal">Normal</option>
+                </select>
+              </label>
+
+              <label>
+                <span>Requester Type</span>
+                <select name="requesterType" required>
+                  <option value="">Select</option>
+                  <option value="Hospital">Hospital/Medical Institution</option>
+                  <option value="Citizen">Citizen/Individual</option>
+                </select>
+              </label>
+
+              <label class="full-width">
+                <span>Proof of Medical Requirement <span id="proofRequired">(required for all)</span></span>
+                <input name="requestProof" type="file" accept=".pdf,.jpg,.jpeg,.png" required />
+                <small>Medical prescription, referral note, or official hospital document is required for all requesters.</small>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-secondary">Reset</button>
+              <button type="submit" class="btn btn-primary">Create request</button>
+            </div>
+            <div id="requestFormSuccess" class="form-success" style="display:none;" role="status"></div>
+            <div id="requestFormError" class="form-error" role="alert"></div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <div id="detailModal" class="modal hidden" aria-hidden="true">
+      <div class="modal-backdrop" data-close-modal="true"></div>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="detailModalTitle">
+        <div class="modal-header">
+          <h3 id="detailModalTitle">Details</h3>
+          <button id="closeDetailModalBtn" class="icon-btn" type="button" aria-label="Close detail window">×</button>
+        </div>
+        <div id="detailModalBody" class="detail-body"></div>
+      </div>
+    </div>
+
+    <div id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+    <script>
+      // Update proof requirement label based on requester type
+      document.addEventListener('DOMContentLoaded', () => {
+        const requesterTypeSelect = document.querySelector('select[name="requesterType"]');
+        const proofRequired = document.getElementById('proofRequired');
+        if (proofRequired) {
+          proofRequired.textContent = '(required for all)';
+          proofRequired.style.color = '#dc2626';
+        }
+        if (requesterTypeSelect) {
+          requesterTypeSelect.addEventListener('change', () => {
+            if (proofRequired) {
+              proofRequired.textContent = '(required for all)';
+              proofRequired.style.color = '#dc2626';
+            }
+          });
+        }
+      });
+    </script>
+
+    <script src="javascript.js"></script>
+  </body>
+</html>
